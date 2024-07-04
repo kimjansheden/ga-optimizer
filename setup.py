@@ -1,12 +1,14 @@
 from setuptools import setup, find_packages
 
 setup(
-    name="ga-optimizer-wrapper",
-    version="0.1.0",
+    name="ga-optimizer",
+    version="0.1.1",
     description="Gradient Accumulation Optimizer Wrapper for Keras/TensorFlow",
+    long_description=open("README.md").read(),
+    long_description_content_type="text/markdown",
     author="Kim Jansheden",
     author_email="kim.jansheden@gmail.com",
-    url="https://github.com/kimjansheden/GAOptimizer",
+    url="https://github.com/kimjansheden/ga-optimizer",
     packages=find_packages(),
     install_requires=[
         "tensorflow>=2.0",
