@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="ga-optimizer",
-    version="0.1.1",
+    version="0.1.2",
     description="Gradient Accumulation Optimizer Wrapper for Keras/TensorFlow",
     long_description=open("README.md").read(),
     long_description_content_type="text/markdown",
