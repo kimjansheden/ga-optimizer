@@ -5,9 +5,6 @@ from tensorflow import keras
 import keras.backend as K
 import tensorflow as tf
 
-## DEBUG START
-print("keras ", keras.optimizers)
-## DEBUG STOP
 
 INSTANCE_ATTRIBUTES = {
     "optimizer",
@@ -48,11 +45,6 @@ class Optimizer(keras.optimizers.Optimizer):
             steps (int): Number of steps to accumulate gradients.
             log_level (int, optional): Logging level. Defaults to LOG_NONE.
         """
-        ## DEBUG START
-        print(
-            f"GA Optimizer.__init__ called with name={name}, optimizer={optimizer} steps={steps}, log_level={log_level}"
-        )
-        ## DEBUG STOP
         super(Optimizer, self).__init__(name)
         self.optimizer = optimizer
         self.steps = steps
@@ -70,10 +62,6 @@ class Optimizer(keras.optimizers.Optimizer):
             f"Wrapping '{optimizer.__class__.__name__}' Keras optimizer with GA of {steps} steps"
         )
 
-        ## DEBUG START
-        print("type(self):", type(self))
-        print("type(self.optimizer)", type(self.optimizer))
-        ## DEBUG STOP
 
     def apply_gradients(self, grads_and_vars, **kwargs):
         if self.accumulated_gradients is None:
@@ -211,17 +199,9 @@ class Optimizer(keras.optimizers.Optimizer):
         stack = inspect.stack()
         caller = stack[1]  # Index 1 to get the immediate caller
         caller_info = f"{caller.function} at {caller.filename}:{caller.lineno}"
-        ## DEBUG START
-        # print(f"get_config called by {caller_info}")
-        ## DEBUG STOP
 
         # Check if the call is coming from within the Keras package
         if "/keras/" in caller.filename:
-            ## DEBUG START
-            # print(
-            #     f"Keras is calling get_config, using get_keras_config instead to return config to: {caller_info}"
-            # )
-            ## DEBUG STOP
             return self.get_keras_config()
 
         config = self.optimizer.get_config()
@@ -242,14 +222,6 @@ class Optimizer(keras.optimizers.Optimizer):
         config = self.optimizer.get_config()
         config["steps"] = self.steps
 
-        ## DEBUG START
-        # print("get_keras_config: type(config):", type(config))
-
-        # print(
-        #     "get_keras_config: Returning config:",
-        #     json.dumps(config, indent=4, default=str),
-        # )
-        ## DEBUG STOP
         return config
 
     def __setattr__(self, name, value):
@@ -267,51 +239,19 @@ class Optimizer(keras.optimizers.Optimizer):
             value: Value to set for the attribute.
         """
         if name in INSTANCE_ATTRIBUTES:
-            ## DEBUG START
-            # print(f"__setattr__: {name} is an instance attribute (it belongs to the wrapper). Setting attribute '{name}' to {value} on self")
-            ## DEBUG STOP
             # Directly set the attribute on the current instance
             object.__setattr__(self, name, value)
-            ## DEBUG START
-            # print(
-            #     f"__setattr__: Successfully set attribute '{name}' to {value} on self"
-            # )
-            ## DEBUG STOP
         else:
             try:
-                ## DEBUG START
-                # print(f"__setattr__: {name} is not an instance attribute. Trying to see if self.optimizer is instantiated and set {name} to {value} on self.optimizer")
-                ## DEBUG STOP
 
                 # Try to set the attribute on the inner optimizer object
                 optimizer = object.__getattribute__(self, "optimizer")
                 setattr(optimizer, name, value)
-                ## DEBUG START
-                # print(
-                #     f"__setattr__: Successfully set attribute '{name}' to {value} on self.optimizer"
-                # )
-                ## DEBUG STOP
             except AttributeError:
-                ## DEBUG START
-                # print(
-                #     f"__setattr__: Attribute '{name}' not found in self or self.optimizer"
-                # )
-                # print(f"__setattr__: Trying to set attribute '{name}' to {value} on self")
-                ## DEBUG STOP
                 try:
                     object.__setattr__(self, name, value)
-                    ## DEBUG START
-                    # print(
-                    #     f"__setattr__: Successfully set attribute '{name}' to {value} on self"
-                    # )
-                    ## DEBUG STOP
                     return
                 except AttributeError:
-                    ## DEBUG START
-                    # print(
-                    #     f"__setattr__: Attribute '{name}' not found in self or self.optimizer either"
-                    # )
-                    ## DEBUG STOP
                     pass
 
     def __getattr__(self, name):
@@ -336,11 +276,6 @@ class Optimizer(keras.optimizers.Optimizer):
                 try:
                     return self.optimizer._weights
                 except Exception as e:
-                    ## DEBUG START
-                    # print(
-                    #     f"Error retrieving weights from optimizer: {e}. Returning empty list"
-                    # )
-                    ## DEBUG STOP
                     return []
 
     def __getattribute__(self, name):
@@ -368,9 +303,6 @@ class Optimizer(keras.optimizers.Optimizer):
         stack = inspect.stack()
         caller = stack[1]  # Index 1 to get the immediate caller
         caller_info = f"{caller.function} at {caller.filename}:{caller.lineno}"
-        ## DEBUG START
-        # print(f"__getattribute__ {name} called by {caller_info}")
-        ## DEBUG STOP
 
         # Check if the call is coming from within the Keras package and name is "__class__"
         if (
@@ -379,47 +311,21 @@ class Optimizer(keras.optimizers.Optimizer):
             and name == "__class__"
         ):
             # Trick Keras by returning the wrapped optimizer class' name when "name" is "__class__"
-            ## DEBUG START
-            # print(
-            #     f"Keras is calling __getattribute__ with __class__. Return optimizer's class name instead to: {caller_info}"
-            # )
-            # print("Returning", self.optimizer.__class__)
-            ## DEBUG STOP
             return self.optimizer.__class__
 
         # First, try to get the attribute from 'self'
         try:
-            ## DEBUG START
-            # print(
-            #     f"Returning attribute '{name}' from self. Returning: {object.__getattribute__(self, name)}"
-            # )
-            ## DEBUG STOP
             return object.__getattribute__(self, name)
         except AttributeError:
             pass  # If the attribute is not found, proceed to the next step
 
-        ## DEBUG START
-        # print(
-        #     f"Attribute {name} not found in self. Getting attribute '{name}' from self.optimizer instead"
-        # )
-        ## DEBUG STOP
 
         # Check if 'self.optimizer' is instantiated
         optimizer = object.__getattribute__(self, "optimizer")
         if optimizer is not None:
-            ## DEBUG START
-            # print(
-            #     f"'self.optimizer' is instantiated. Getting attribute '{name}' from {optimizer.__class__.__name__}"
-            # )
-            ## DEBUG STOP
             try:
                 return getattr(optimizer, name)
             except Exception as e:
-                ## DEBUG START
-                # print(
-                #     f"Error returning attribute '{name}' from {optimizer.__class__.__name__}: {e}"
-                # )
-                ## DEBUG STOP
                 raise
 
         # If 'self.optimizer' is not instantiated, raise AttributeError
@@ -429,10 +335,6 @@ class Optimizer(keras.optimizers.Optimizer):
 
     def log(self, level, *args, **kwargs):
         """Logs a message if the given log level is high enough."""
-        ## DEBUG START
-        # print(f"self.log_level: {self.log_level}")
-        # print(f"level: {level}")
-        ## DEBUG STOP
         if level <= self.log_level:
             tf.print(*args, **kwargs)
 
@@ -450,26 +352,15 @@ def _optimizer(optimizer_name):
     try:
 
         def init_optimizer(self, steps, **kwargs):
-            ## DEBUG START
-            # print(
-            #     f"Creating {optimizer_name} optimizer with steps: {steps} and kwargs: {kwargs}"
-            # )
-            ## DEBUG STOP
             filtered_kwargs = {
                 k: v
                 for k, v in kwargs.items()
                 if k not in INSTANCE_ATTRIBUTES and k not in CLASS_ATTRIBUTES
             }
-            ## DEBUG START
-            # print(f"Filtered kwargs for {optimizer_name}: {filtered_kwargs}")
-            ## DEBUG STOP
 
             keras_object = keras.optimizers
             keras_optimizer = getattr(keras_object, optimizer_name)(**filtered_kwargs)
 
-            ## DEBUG START
-            # print(f"Keras optimizer: {keras_optimizer}")
-            ## DEBUG STOP
             Optimizer.__init__(
                 self, name=optimizer_name, optimizer=keras_optimizer, steps=steps
             )
@@ -480,11 +371,6 @@ def _optimizer(optimizer_name):
             {"__init__": init_optimizer},
         )
         setattr(sys.modules[__name__], optimizer_name, optimizer_class)
-        ## DEBUG START
-        # print(
-        #     # f"Successfully created optimizer class '{optimizer_name}' with attributes {dir(optimizer_class)}"
-        # )
-        ## DEBUG STOP
     except TypeError as e:
         print(f"Error creating optimizer class '{optimizer_name}': {e}")
         raise
